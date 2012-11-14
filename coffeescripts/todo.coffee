@@ -7,6 +7,9 @@ $ ->
     toggle: () ->
       @set "done", !@get("done")
 
+    clear: () ->
+      @destroy()
+
   class window.TodoList extends Backbone.Collection
     model: Todo
     localStorage: new Backbone.LocalStorage("todo")
@@ -17,15 +20,12 @@ $ ->
     template: Handlebars.templates.todo
     events: {
       'click .destroy' : 'clear'
-      'click .done'    : 'toggleTodo'
     }
     initialize: () ->
       @model.on("all", @render, @)
     clear: () ->
-      @model.destroy()
+      @model.clear()
       @remove()
-    toggleTodo: () ->
-      @model.toggle()
     render: () ->
       @$el.html @template(@model.toJSON())
       return @
@@ -41,15 +41,16 @@ $ ->
       @input = $("#new-todo")
       @footer = $("footer")
       Todos.on("all", @render, @)
-      Todos.on("reset", @addAll, @)
+      Todos.on("fetched", @addAll, @)
       Todos.on("add", @addOne, @)
       Todos.fetch()
+      Todos.trigger("fetched")
     addOne: (todo) ->
       view = new TodoView(model: todo)
       $("#todo-list").append view.render().el
     addAll: () ->
       Todos.each @addOne
     render: () ->
-      @footer.html @template(done: 0)
+      @footer.html @template(done: Todos.length)
 
   window.App = new AppView(el: $("#todo-app"))
